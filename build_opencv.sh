@@ -5,8 +5,9 @@ set -e
 
 # change default constants here:
 readonly PREFIX=/usr/local  # install prefix, (can be ~/.local for a user install)
-readonly DEFAULT_VERSION=4.4.0  # controls the default version (gets reset by the first argument)
+readonly DEFAULT_VERSION=3.2.0-whs  # controls the default version (gets reset by the first argument)
 readonly CPUS=$(nproc)  # controls the number of jobs
+readonly OPENCV_PARENT_DIR=$HOME
 
 # better board detection. if it has 6 or more cpus, it probably has a ton of ram too
 if [[ $CPUS -gt 5 ]]; then
@@ -26,7 +27,7 @@ cleanup () {
         fi
         read -p "Y/N " yn
         case ${yn} in
-            [Yy]* ) rm -rf /tmp/build_opencv ; break;;
+            [Yy]* ) rm -rf /tmp/build_opencv/opencv/build /tmp/build_opencv ; break;;
             [Nn]* ) exit ;;
             * ) echo "Please answer yes or no." ;;
         esac
@@ -45,8 +46,14 @@ setup () {
 
 git_source () {
     echo "Getting version '$1' of OpenCV"
-    git clone --depth 1 --branch "$1" https://github.com/opencv/opencv.git
-    git clone --depth 1 --branch "$1" https://github.com/opencv/opencv_contrib.git
+    pushd "$OPENCV_PARENT_DIR"
+    pwd
+    ls -alp
+    if [ ! -e opencv ]; then
+        git clone --depth 1 --branch "$1" https://github.com/full-aar/opencv.git
+    fi
+    popd
+    ln -s "$OPENCV_PARENT_DIR/opencv" opencv
 }
 
 install_dependencies () {
@@ -113,10 +120,8 @@ configure () {
         -D CUDA_FAST_MATH=ON
         -D CUDNN_VERSION='8.0'
         -D EIGEN_INCLUDE_PATH=/usr/include/eigen3 
-        -D ENABLE_NEON=ON
         -D OPENCV_DNN_CUDA=ON
         -D OPENCV_ENABLE_NONFREE=ON
-        -D OPENCV_EXTRA_MODULES_PATH=/tmp/build_opencv/opencv_contrib/modules
         -D OPENCV_GENERATE_PKGCONFIG=ON
         -D WITH_CUBLAS=ON
         -D WITH_CUDA=ON
