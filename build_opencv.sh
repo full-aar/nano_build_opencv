@@ -96,6 +96,7 @@ install_dependencies () {
         libgstreamer-plugins-good1.0-dev \
         libgstreamer1.0-dev \
         libgtk-3-dev \
+        libhdf5-dev \
         libjpeg-dev \
         libjpeg8-dev \
         libjpeg-turbo8-dev \
@@ -110,6 +111,7 @@ install_dependencies () {
         libtesseract-dev \
         libtiff-dev \
         libv4l-dev \
+        libvtk7-dev \
         libxine2-dev \
         libxvidcore-dev \
         libx264-dev \
@@ -123,6 +125,9 @@ install_dependencies () {
 configure () {
     local CMAKEFLAGS="
         -D BUILD_EXAMPLES=OFF
+        -D BUILD_opencv_python2=OFF
+        -D BUILD_opencv_python3=OFF
+        -D BUILD_opencv_java=OFF
         -D CMAKE_BUILD_TYPE=RELEASE
         -D CMAKE_INSTALL_PREFIX=${PREFIX}
         -D CUDA_ARCH_BIN=5.3,6.2
@@ -139,7 +144,8 @@ configure () {
         -D WITH_CUDNN=ON
         -D WITH_GSTREAMER=ON
         -D WITH_LIBV4L=ON
-        -D WITH_OPENGL=ON"
+        -D WITH_OPENGL=ON
+        -D WITH_VTK=ON"
 
     if [[ "$1" != "test" ]] ; then
         CMAKEFLAGS="
