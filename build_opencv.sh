@@ -6,6 +6,7 @@ set -e
 # change default constants here:
 readonly PREFIX=/usr/local  # install prefix, (can be ~/.local for a user install)
 readonly DEFAULT_VERSION=3.2.0-whs  # controls the default version (gets reset by the first argument)
+readonly DEFAULT_CONTRIB_VERSION=3.2.0
 readonly CPUS=$(nproc)  # controls the number of jobs
 readonly OPENCV_PARENT_DIR=$HOME
 
@@ -68,6 +69,8 @@ git_source () {
     fi
     popd
     ln -s "$OPENCV_PARENT_DIR/opencv" opencv
+    echo "Getting version '$2' of OpenCV contrib"
+    git clone --depth 1 --branch "$2" https://github.com/opencv/opencv_contrib.git
 }
 
 install_dependencies () {
@@ -129,6 +132,7 @@ configure () {
         -D EIGEN_INCLUDE_PATH=/usr/include/eigen3 
         -D OPENCV_DNN_CUDA=ON
         -D OPENCV_ENABLE_NONFREE=ON
+        -D OPENCV_EXTRA_MODULES_PATH=/tmp/build_opencv/opencv_contrib/modules
         -D OPENCV_GENERATE_PKGCONFIG=ON
         -D WITH_CUBLAS=ON
         -D WITH_CUDA=ON
@@ -155,6 +159,7 @@ configure () {
 main () {
 
     local VER=${DEFAULT_VERSION}
+    local CONTRIB_VER=${DEFAULT_CONTRIB_VERSION}
 
     # parse arguments
     if [[ "$#" -gt 0 ]] ; then
@@ -170,7 +175,7 @@ main () {
     if [ "$INSTALL_DEPS" -ne 0 ]; then
        install_dependencies
     fi
-    git_source ${VER}
+    git_source ${VER} ${CONTRIB_VER}
 
     if [[ ${DO_TEST} ]] ; then
         configure test
