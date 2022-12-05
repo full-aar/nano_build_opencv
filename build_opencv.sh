@@ -9,6 +9,20 @@ readonly DEFAULT_VERSION=3.2.0-whs  # controls the default version (gets reset b
 readonly CPUS=$(nproc)  # controls the number of jobs
 readonly OPENCV_PARENT_DIR=$HOME
 
+INSTALL_DEPS=1
+while getopts 's' OPTION; do
+    case "$OPTION" in
+        s)
+            INSTALL_DEPS=0
+            ;;
+        ?)
+            echo "script usage: $(basename \$0) [-s] [OPENCV_VERSION]" >&2
+      exit 1
+      ;;
+    esac
+done
+shift "$(($OPTIND -1))"
+
 # better board detection. if it has 6 or more cpus, it probably has a ton of ram too
 if [[ $CPUS -gt 5 ]]; then
     # something with a ton of ram
@@ -97,11 +111,6 @@ install_dependencies () {
         libxvidcore-dev \
         libx264-dev \
         pkg-config \
-        python-dev \
-        python-numpy \
-        python3-dev \
-        python3-numpy \
-        python3-matplotlib \
         qv4l2 \
         v4l-utils \
         v4l2ucp \
@@ -111,11 +120,9 @@ install_dependencies () {
 configure () {
     local CMAKEFLAGS="
         -D BUILD_EXAMPLES=OFF
-        -D BUILD_opencv_python2=ON
-        -D BUILD_opencv_python3=ON
         -D CMAKE_BUILD_TYPE=RELEASE
         -D CMAKE_INSTALL_PREFIX=${PREFIX}
-        -D CUDA_ARCH_BIN=5.3,6.2,7.2
+        -D CUDA_ARCH_BIN=5.3,6.2
         -D CUDA_ARCH_PTX=
         -D CUDA_FAST_MATH=ON
         -D CUDNN_VERSION='8.0'
@@ -160,7 +167,9 @@ main () {
 
     # prepare for the build:
     setup
-    install_dependencies
+    if [ "$INSTALL_DEPS" -ne 0 ]; then
+       install_dependencies
+    fi
     git_source ${VER}
 
     if [[ ${DO_TEST} ]] ; then
@@ -168,7 +177,7 @@ main () {
     else
         configure
     fi
-
+    
     # start the build
     make -j${JOBS} 2>&1 | tee -a build.log
 
